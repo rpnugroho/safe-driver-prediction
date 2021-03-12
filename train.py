@@ -10,20 +10,20 @@ from pipeline import clean_pipe
 from lightgbm import LGBMClassifier
 from utils import gini_normalized_scorer, UpsampleStratifiedKFold, log_cv_plot
 
-ap = argparse.ArgumentParser()
-ap.add_argument("-d", "--dataset_path",
-                default="dataset/train.csv",
-                help="Path to training dataset")
-ap.add_argument("-t", "--test_dataset_path",
-                default="dataset/test.csv",
-                help="Path to test dataset")
-ap.add_argument("-s", "--submission",
-                default=False,
-                help="Create submission or not")
-ap.add_argument("-f", "--submission_path",
-                default="submission",
-                help="Path to submission")
-args = vars(ap.parse_args())
+parser = argparse.ArgumentParser()
+parser.add_argument("-d", "--dataset_path",
+                    default="dataset/train.csv",
+                    help="Path to training dataset")
+parser.add_argument("-t", "--test_dataset_path",
+                    default="dataset/test.csv",
+                    help="Path to test dataset")
+parser.add_argument("-s", "--submission",
+                    default=False,
+                    help="Create submission or not")
+parser.add_argument("-f", "--submission_path",
+                    default="submission",
+                    help="Path to submission")
+args = parser.parse_args()
 
 
 hyperparameter_defaults = dict(
