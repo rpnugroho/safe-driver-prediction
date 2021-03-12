@@ -47,7 +47,7 @@ config = wandb.config
 
 # Prepare dataset
 try:
-    train_df = pd.read_csv(args["dataset_path"])
+    train_df = pd.read_csv(args.dataset_path)
     X = train_df.copy()
     y = X.pop(cfg.TARGET)
 except:
@@ -103,11 +103,11 @@ for metric_name in metric_names:
     log_cv_plot(metric_name, score)
 
 
-if args["submission"]:
+if args.submission:
     # TODO: INFERENCE
     model_pipeline.fit(X, y)
     try:
-        test_df = pd.read_csv(args["test_dataset_path"])
+        test_df = pd.read_csv(args.test_dataset_path)
         # test = test_df.sample(n=1000).reset_index().copy()
     except:
         print("Cannot read training dataset.")
@@ -115,7 +115,7 @@ if args["submission"]:
     predictions = model_pipeline.predict_proba(test_df)
 
     # Create submission file
-    submission_path = args["submission_path"]
+    submission_path = args.submission_path
     time_stamp = str(int(time()))
     submission_file = f"{submission_path}/{time_stamp}.csv"
     submission = pd.DataFrame(
