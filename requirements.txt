@@ -1,0 +1,4 @@
+sklearn
+pandas
+wandb
+git+https://github.com/rpnugroho/scikit-pandas-pipeline.git#egg=skpdspipe
