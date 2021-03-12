@@ -23,7 +23,7 @@ parser.add_argument("-s", "--submission",
 parser.add_argument("-f", "--submission_path",
                     default="submission",
                     help="Path to submission")
-args = parser.parse_args()
+args, unknown = parser.parse_known_args()
 
 
 hyperparameter_defaults = dict(
