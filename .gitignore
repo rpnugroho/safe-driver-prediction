@@ -3,6 +3,7 @@
 # Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode,macos,jupyternotebooks,pydev,python
 # Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode,macos,jupyternotebooks,pydev,python
 
+tes.py
 dataset
 notebook
 wandb
