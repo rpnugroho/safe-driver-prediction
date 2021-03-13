@@ -111,7 +111,7 @@ if args.inference:
     time_stamp = str(int(time()))
     submission_file = f"{output_path}/{time_stamp}.csv"
     submission = pd.DataFrame(
-        {'id': test_df.index, 'target': predictions[:, 1]})
+        {'id': test_df.id, 'target': predictions[:, 1]})
     submission.to_csv(submission_file, index=False)
 
 
