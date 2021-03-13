@@ -1,16 +1,13 @@
-
-from operator import sub
 import pandas as pd
 import argparse
 import wandb
+import joblib
 from time import time
 from sklearn.pipeline import Pipeline
 import config as cfg
-from sklearn.model_selection import cross_validate
 from sklearn.utils import resample
 from pipeline import clean_pipe
 from lightgbm import LGBMClassifier
-from utils import gini_normalized_scorer, UpsampleStratifiedKFold, log_cv_plot
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-d", "--dataset_path",
@@ -19,12 +16,17 @@ parser.add_argument("-d", "--dataset_path",
 parser.add_argument("-t", "--test_dataset_path",
                     default="dataset/test.csv",
                     help="Path to test dataset")
-parser.add_argument("-s", "--submission",
+parser.add_argument("-o", "--output_path",
+                    default="output",
+                    help="Path to output file")
+parser.add_argument("-i", "--inference",
                     default=False,
-                    help="Create submission or not")
-parser.add_argument("-f", "--submission_path",
-                    default="submission",
-                    help="Path to submission")
+                    action='store_true',
+                    help="Create prediction file")
+parser.add_argument("-m", "--model",
+                    default=False,
+                    action='store_true',
+                    help="Save model file")
 args, unknown = parser.parse_known_args()
 
 
@@ -77,13 +79,14 @@ clf = LGBMClassifier(
 not_target = train_df[train_df.target == 0]
 yes_target = train_df[train_df.target == 1]
 
-not_target_up = resample(yes_target,
+yes_target_up = resample(yes_target,
                          replace=True,  # sample without replacement
                          n_samples=len(not_target),  # match majority n
                          random_state=42)  # reproducible results
 
-# Combine minority and downsampled majority
-upsampled = pd.concat([not_target_up, not_target])
+# Combine majority and upsampled minority
+upsampled = pd.concat([yes_target_up, not_target],
+                      ignore_index=True).sample(frac=1)
 
 X = upsampled.copy()
 y = X.pop(cfg.TARGET)
@@ -95,17 +98,30 @@ model_pipeline = Pipeline([
 
 model_pipeline.fit(X, y)
 
-try:
-    test_df = pd.read_csv(args.test_dataset_path)
-except:
-    print("Cannot read testing dataset.")
-# Make predictions
-predictions = model_pipeline.predict_proba(test_df)
+if args.inference:
+    try:
+        test_df = pd.read_csv(args.test_dataset_path)
+    except:
+        print("Cannot read testing dataset.")
+    # Make predictions
+    predictions = model_pipeline.predict_proba(test_df)
 
-# Create submission file
-submission_path = args.submission_path
-time_stamp = str(int(time()))
-submission_file = f"{submission_path}/{time_stamp}.csv"
-submission = pd.DataFrame(
-    {'id': test_df.index, 'target': predictions[:, 1]})
-submission.to_csv(submission_file, index=False)
+    # Create submission file
+    output_path = args.output_path
+    time_stamp = str(int(time()))
+    submission_file = f"{output_path}/{time_stamp}.csv"
+    submission = pd.DataFrame(
+        {'id': test_df.index, 'target': predictions[:, 1]})
+    submission.to_csv(submission_file, index=False)
+
+
+if args.model:
+    # Log model_pipeline.pkl
+    model_file = f"{output_path}/{time_stamp}.pkl"
+    joblib.dump(model_pipeline, model_file)
+    # Create a new artifact, which is a sample dataset
+    model_pkl = wandb.Artifact(time_stamp, type='model')
+    # Add files to the artifact, in this case a simple text file
+    model_pkl.add_file(model_file)
+    # Log the artifact to save it as an output of this run
+    wandb.log_artifact(model_pkl)
